@@ -44,7 +44,7 @@ If the input contains no `gcs_uri` values, write the VISUALS REVIEW section as:
 - What Works: No images provided for review.
 - Issues: None
 - Suggestions: None
-Treat NOT_REVIEWED as approved when computing All Approved.
+Treat NOT_REVIEWED as NOT approved when computing All Approved.
 
 Required output format - use this EXACTLY:
 
@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
     load_dotenv()
 
-    PORT = int(os.getenv("PORT", "8080"))
+    PORT = int(os.getenv("PORT", "8083"))
     HOST = os.getenv("HOST", "0.0.0.0")
     PUBLIC_HOST = os.getenv("PUBLIC_HOST", "localhost")
     PUBLIC_PORT = int(os.getenv("PUBLIC_PORT", str(PORT)))

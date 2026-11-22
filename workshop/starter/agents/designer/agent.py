@@ -72,7 +72,7 @@ if __name__ == "__main__":
     import uvicorn
     from google.adk.a2a.utils.agent_to_a2a import to_a2a
 
-    PORT = int(os.getenv("PORT", "8080"))
+    PORT = int(os.getenv("PORT", "8081"))
     HOST = os.getenv("HOST", "0.0.0.0")
     PUBLIC_HOST = os.getenv("PUBLIC_HOST", "localhost")
     PUBLIC_PORT = int(os.getenv("PUBLIC_PORT", str(PORT)))

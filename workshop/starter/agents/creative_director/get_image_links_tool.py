@@ -17,6 +17,12 @@ def get_image_links(gcs_uris: list[str]) -> dict:
         {"status": "success", "links": [{"concept": "...", "url": "https://..."}]}
         or {"status": "error", "error": "..."}
     """
+    allowed_bucket = os.environ.get("GCS_IMAGES_BUCKET")
+    prefix = f"gs://{allowed_bucket}/"
+    if (not allowed_bucket or not isinstance(gcs_uris, list) or not gcs_uris
+            or any(not isinstance(uri, str) or not uri.startswith(prefix)
+                   or not uri[len(prefix):].strip() for uri in gcs_uris)):
+        return {"status": "error", "error": "Image URIs must belong to GCS_IMAGES_BUCKET"}
     try:
         from google.cloud import storage as gcs
         import google.auth
@@ -65,7 +71,7 @@ def get_image_links(gcs_uris: list[str]) -> dict:
             )
             use_signed = True
         else:
-            use_signed = False
+            return {"status": "error", "error": "Signing identity unavailable; preserve GCS URIs"}
 
         links = []
         for uri in gcs_uris:
@@ -76,17 +82,12 @@ def get_image_links(gcs_uris: list[str]) -> dict:
             filename = blob_path.rsplit("/", 1)[-1]
             concept = re.sub(r"-[0-9a-f]{8}\.[^.]+$", "", filename)
 
-            if use_signed:
-                url = blob.generate_signed_url(
-                    version="v4",
-                    expiration=timedelta(hours=1),
-                    method="GET",
-                    credentials=sign_credentials,
-                )
-            else:
-                # No SA available - requires bucket public read access.
-                # Set SIGNING_SERVICE_ACCOUNT in .env to enable signed URLs locally.
-                url = f"https://storage.googleapis.com/{bucket_name}/{blob_path}"
+            url = blob.generate_signed_url(
+                version="v4",
+                expiration=timedelta(hours=1),
+                method="GET",
+                credentials=sign_credentials,
+            )
 
             links.append({"concept": concept, "url": url})
 

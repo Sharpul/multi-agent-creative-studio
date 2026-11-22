@@ -22,7 +22,14 @@ Supports parallel deployment for faster execution
 import asyncio
 import os
 import sys
+import shutil
+from dotenv import load_dotenv
 from pathlib import Path
+
+GCLOUD = shutil.which("gcloud.cmd" if os.name == "nt" else "gcloud")
+
+if not GCLOUD:
+    raise RuntimeError("Google Cloud CLI not found")
 
 # Import env_utils from same directory
 sys.path.insert(0, str(Path(__file__).parent))
@@ -89,7 +96,7 @@ async def _add_secret_version(
 ) -> tuple[int, str, str]:
     """Add a version to an existing Secret Manager secret, passing the value via stdin."""
     process = await asyncio.create_subprocess_exec(
-        "gcloud", "secrets", "versions", "add", secret_id,
+        GCLOUD, "secrets", "versions", "add", secret_id,
         "--data-file=-",
         f"--project={project_id}",
         "--quiet",
@@ -133,7 +140,7 @@ async def setup_notion_secrets(project_id: str) -> dict[str, str]:
     for env_var, (secret_id, value) in credentials.items():
         # Create secret (idempotent - ALREADY_EXISTS is not an error)
         await run_command_async([
-            "gcloud", "secrets", "create", secret_id,
+            GCLOUD, "secrets", "create", secret_id,
             f"--project={project_id}",
             "--replication-policy=automatic",
             "--quiet",
@@ -159,16 +166,16 @@ async def grant_pm_secret_access(project_id: str, secret_refs: dict[str, str]) -
         return
 
     _, project_number, _ = await run_command_async([
-        "gcloud", "projects", "describe", project_id,
+        GCLOUD, "projects", "describe", project_id,
         "--format=value(projectNumber)",
     ])
-    sa_email = f"{project_number.strip()}-compute@developer.gserviceaccount.com"
+    sa_email = f"creative-studio-agents@{project_id}.iam.gserviceaccount.com"
     print(f"   Granting Secret Manager access to {sa_email}...")
 
     for _, secret_path in secret_refs.items():
         secret_id = secret_path.split(":")[0]
         returncode, _, stderr = await run_command_async([
-            "gcloud", "secrets", "add-iam-policy-binding", secret_id,
+            GCLOUD, "secrets", "add-iam-policy-binding", secret_id,
             f"--member=serviceAccount:{sa_email}",
             "--role=roles/secretmanager.secretAccessor",
             f"--project={project_id}",
@@ -205,7 +212,7 @@ async def deploy_single_agent(
     # Build environment variables
     # GOOGLE_CLOUD_LOCATION controls model routing - may be "global" for preview
     # models. Read from env rather than using the Cloud Run deployment region.
-    gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    gemini_model = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
     model_location = os.getenv("GOOGLE_CLOUD_LOCATION", "global")
     env_vars = (
         f"GOOGLE_GENAI_USE_VERTEXAI=true,"
@@ -241,7 +248,7 @@ async def deploy_single_agent(
             )
 
     cmd = [
-        "gcloud",
+        GCLOUD,
         "run",
         "deploy",
         name,
@@ -251,6 +258,7 @@ async def deploy_single_agent(
         f"--region={region}",
         f"--project={project_id}",
         "--allow-unauthenticated",  # Allow public access to agent cards
+        f"--service-account=creative-studio-agents@{project_id}.iam.gserviceaccount.com",
         f"--set-env-vars={env_vars}",
         "--memory=1Gi",
         "--cpu=1",
@@ -306,7 +314,7 @@ async def get_service_url(
         Service URL or None if not found
     """
     cmd = [
-        "gcloud",
+        GCLOUD,
         "run",
         "services",
         "describe",
@@ -350,7 +358,7 @@ async def update_agent_a2a_config(
     env_vars_update = f"PUBLIC_HOST={public_host},PUBLIC_PORT=443,PROTOCOL=https"
 
     cmd = [
-        "gcloud",
+        GCLOUD,
         "run",
         "services",
         "update",
@@ -385,7 +393,7 @@ async def grant_designer_gcs_access(
 
     # Retrieve the service account email used by the Cloud Run service
     _, sa_email, _ = await run_command_async([
-        "gcloud", "run", "services", "describe", service_name,
+        GCLOUD, "run", "services", "describe", service_name,
         "--platform=managed",
         f"--region={region}",
         f"--project={project_id}",
@@ -396,13 +404,13 @@ async def grant_designer_gcs_access(
     # Fall back to compute default SA if no custom SA is configured
     if not sa_email:
         _, project_number, _ = await run_command_async([
-            "gcloud", "projects", "describe", project_id,
+            GCLOUD, "projects", "describe", project_id,
             "--format=value(projectNumber)",
         ])
         sa_email = f"{project_number.strip()}-compute@developer.gserviceaccount.com"
 
     returncode, _, stderr = await run_command_async([
-        "gcloud", "storage", "buckets", "add-iam-policy-binding",
+        GCLOUD, "storage", "buckets", "add-iam-policy-binding",
         f"gs://{bucket}",
         f"--member=serviceAccount:{sa_email}",
         "--role=roles/storage.objectCreator",
@@ -427,7 +435,7 @@ async def deploy_all_agents(project_id: str, region: str) -> dict[str, str]:
     # Pre-create the Artifact Registry repository
     print("⏳ Pre-creating Artifact Registry repository...")
     _, _, ar_err = await run_command_async([
-        "gcloud", "artifacts", "repositories", "create", "cloud-run-source-deploy",
+        GCLOUD, "artifacts", "repositories", "create", "cloud-run-source-deploy",
         "--repository-format=docker",
         f"--location={region}",
         f"--project={project_id}",
@@ -475,6 +483,9 @@ async def main_async():
     """Async main function"""
     print("Multi-Agent Cloud Run Deployment\n")
 
+    # Make .env values available to os.getenv()
+    load_dotenv()
+
     # Load environment configuration
     config = env_utils.load_env_file()
 
@@ -495,7 +506,7 @@ async def main_async():
 
     # Check if gcloud is installed
     try:
-        returncode, _, _ = await run_command_async(["gcloud", "version"])
+        returncode, _, _ = await run_command_async([GCLOUD, "version"])
         if returncode != 0:
             raise FileNotFoundError
     except FileNotFoundError:

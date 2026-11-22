@@ -1,0 +1,16 @@
+# Local runtime data; this starter is independently usable as a project root.
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.adk/
+.uv-cache/
+.env
+.env.*
+!.env.example
+*.log
+*.db
+*.sqlite*
+credentials.json
+*.pem
+*.key

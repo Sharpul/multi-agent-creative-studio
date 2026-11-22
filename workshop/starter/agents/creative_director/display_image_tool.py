@@ -18,6 +18,11 @@ async def display_image(gcs_uri: str, concept_name: str, tool_context: ToolConte
     Returns:
         {"status": "success", "concept_name": "..."} or {"status": "error", "error": "..."}
     """
+    bucket = os.environ.get("GCS_IMAGES_BUCKET")
+    prefix = f"gs://{bucket}/"
+    if (not bucket or not isinstance(gcs_uri, str) or not gcs_uri.startswith(prefix)
+            or not gcs_uri[len(prefix):].strip()):
+        return {"status": "error", "error": "Image URI must belong to GCS_IMAGES_BUCKET"}
     try:
         from google.cloud import storage as gcs
 

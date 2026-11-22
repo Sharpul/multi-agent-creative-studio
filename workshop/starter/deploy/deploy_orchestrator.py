@@ -54,7 +54,8 @@ load_dotenv()
 # GOOGLE_CLOUD_LOCATION may be "global" (for preview model routing) — do NOT use it here.
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("PROJECT_ID", "")
 PROJECT_NUMBER = os.getenv("GOOGLE_CLOUD_PROJECT_NUMBER") or subprocess.check_output(
-    ["gcloud", "projects", "describe", PROJECT_ID, "--format=value(projectNumber)"],
+    ["gcloud.cmd" if os.name == "nt" else "gcloud",
+    "projects", "describe", PROJECT_ID, "--format=value(projectNumber)"],
     text=True,
 ).strip()
 LOCATION = (
@@ -181,6 +182,12 @@ def deploy_orchestrator(auto_deploy_specialists=False):
         # discovers and tarballs local packages for upload to the staging bucket.
         os.chdir(project_root / "agents")
 
+        os.chdir(project_root / "agents")
+
+        from creative_director.agent import root_app
+
+        adk_app = agent_engines.AdkApp(app=root_app)
+
         agent_engine_resource = agent_engines.create(
             agent_engine=adk_app,
             display_name=DISPLAY_NAME,
@@ -207,7 +214,9 @@ def deploy_orchestrator(auto_deploy_specialists=False):
                 "GOOGLE_CLOUD_LOCATION": os.getenv("GOOGLE_CLOUD_LOCATION", "global"),
                 "GOOGLE_GENAI_USE_VERTEXAI": "true",
                 "GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY": "true",
-                "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT": "true",
+                "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT": "false",
+                "ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS": "false",
+                "GCS_IMAGES_BUCKET": os.getenv("GCS_IMAGES_BUCKET", ""),
                 # SA used to sign GCS image URLs - required for get_image_links tool.
                 "SIGNING_SERVICE_ACCOUNT": f"{PROJECT_NUMBER}-compute@developer.gserviceaccount.com",
             },

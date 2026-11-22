@@ -1,0 +1,183 @@
+[
+  {
+    "name": "approval",
+    "steps": [
+      {
+        "agent": "brand_strategist",
+        "response": "offline research"
+      },
+      {
+        "agent": "copywriter",
+        "response": "offline captions"
+      },
+      {
+        "agent": "designer",
+        "response": "gs://offline/image.png"
+      },
+      {
+        "agent": "critic",
+        "response": "**POSTS REVIEW:**\n- Status: APPROVED\n\n**VISUALS REVIEW:**\n- Status: APPROVED\n\n**OVERALL ASSESSMENT:**\n- All Approved: YES\n"
+      },
+      {
+        "agent": "project_manager",
+        "response": "timeline"
+      }
+    ],
+    "expected": {
+      "quality_gate_approved": true,
+      "quality_gate_rounds": 1,
+      "guard_blocked_agents": [],
+      "callback_error_agents": [],
+      "admitted_after_callback_error": []
+    }
+  },
+  {
+    "name": "revision",
+    "steps": [
+      {
+        "agent": "brand_strategist",
+        "response": "offline research"
+      },
+      {
+        "agent": "copywriter",
+        "response": "offline captions"
+      },
+      {
+        "agent": "designer",
+        "response": "gs://offline/image.png"
+      },
+      {
+        "agent": "critic",
+        "response": "**POSTS REVIEW:**\n- Status: APPROVED\n\n**VISUALS REVIEW:**\n- Status: APPROVED\n\n**OVERALL ASSESSMENT:**\n- All Approved: NO\n"
+      },
+      {
+        "agent": "copywriter",
+        "response": "revised captions"
+      },
+      {
+        "agent": "critic",
+        "response": "**POSTS REVIEW:**\n- Status: APPROVED\n\n**VISUALS REVIEW:**\n- Status: APPROVED\n\n**OVERALL ASSESSMENT:**\n- All Approved: YES\n"
+      },
+      {
+        "agent": "project_manager",
+        "response": "timeline"
+      }
+    ],
+    "expected": {
+      "quality_gate_approved": true,
+      "quality_gate_rounds": 2,
+      "guard_blocked_agents": [],
+      "callback_error_agents": [],
+      "admitted_after_callback_error": []
+    }
+  },
+  {
+    "name": "exhaustion",
+    "steps": [
+      {
+        "agent": "brand_strategist",
+        "response": "offline research"
+      },
+      {
+        "agent": "copywriter",
+        "response": "offline captions"
+      },
+      {
+        "agent": "designer",
+        "response": "gs://offline/image.png"
+      },
+      {
+        "agent": "critic",
+        "response": "**POSTS REVIEW:**\n- Status: APPROVED\n\n**VISUALS REVIEW:**\n- Status: APPROVED\n\n**OVERALL ASSESSMENT:**\n- All Approved: NO\n"
+      },
+      {
+        "agent": "critic",
+        "response": "**POSTS REVIEW:**\n- Status: APPROVED\n\n**VISUALS REVIEW:**\n- Status: APPROVED\n\n**OVERALL ASSESSMENT:**\n- All Approved: NO\n"
+      },
+      {
+        "agent": "critic",
+        "response": "**POSTS REVIEW:**\n- Status: APPROVED\n\n**VISUALS REVIEW:**\n- Status: APPROVED\n\n**OVERALL ASSESSMENT:**\n- All Approved: NO\n"
+      },
+      {
+        "agent": "critic",
+        "response": "**POSTS REVIEW:**\n- Status: APPROVED\n\n**VISUALS REVIEW:**\n- Status: APPROVED\n\n**OVERALL ASSESSMENT:**\n- All Approved: NO\n"
+      },
+      {
+        "agent": "project_manager",
+        "response": "blocked"
+      }
+    ],
+    "expected": {
+      "quality_gate_approved": false,
+      "quality_gate_rounds": 3,
+      "guard_blocked_agents": [
+        "critic",
+        "project_manager"
+      ],
+      "callback_error_agents": [],
+      "admitted_after_callback_error": []
+    }
+  },
+  {
+    "name": "specialist_failure",
+    "steps": [
+      {
+        "agent": "copywriter",
+        "response": {
+          "error": "offline timeout"
+        }
+      },
+      {
+        "agent": "designer",
+        "response": "blocked"
+      }
+    ],
+    "expected": {
+      "quality_gate_approved": false,
+      "quality_gate_rounds": 0,
+      "guard_blocked_agents": [],
+      "callback_error_agents": [
+        "copywriter"
+      ],
+      "admitted_after_callback_error": [
+        "designer"
+      ]
+    }
+  },
+  {
+    "name": "pm_failure",
+    "steps": [
+      {
+        "agent": "brand_strategist",
+        "response": "offline research"
+      },
+      {
+        "agent": "copywriter",
+        "response": "offline captions"
+      },
+      {
+        "agent": "designer",
+        "response": "gs://offline/image.png"
+      },
+      {
+        "agent": "critic",
+        "response": "**POSTS REVIEW:**\n- Status: APPROVED\n\n**VISUALS REVIEW:**\n- Status: APPROVED\n\n**OVERALL ASSESSMENT:**\n- All Approved: YES\n"
+      },
+      {
+        "agent": "project_manager",
+        "response": {
+          "error": "offline PM failure"
+        }
+      }
+    ],
+    "expected": {
+      "quality_gate_approved": true,
+      "quality_gate_rounds": 1,
+      "guard_blocked_agents": [],
+      "callback_error_agents": [
+        "project_manager"
+      ],
+      "admitted_after_callback_error": []
+    }
+  }
+]
