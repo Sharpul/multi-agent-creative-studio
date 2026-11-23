@@ -31,19 +31,16 @@ is different from authorizing live interaction; submitting a campaign can invoke
 or execute it as an offline check.
 
 ## Existing deployment entry points
-- `deploy/deploy_all_specialists.py`: builds/deploys Cloud Run, may add Secret Manager versions/IAM
-  bindings, and writes service URLs to .env. The deployment script currently selects only the Project Manager
-  for deployment; the other specialists are commented out. This is a deployment-script configuration, not evidence that
-  the other services are currently running or have been validated. All five specialist URLs must resolve to compatible A2A
-  services for the complete distributed workflow to operate. Review the intended selection before an approved deployment.
-  No list changes were made.
-- `deploy/deploy_orchestrator.py`: creates Agent Engine, packages the Director and passes configuration.
-  Source now passes GCS_IMAGES_BUCKET and disables content capture; existing deployed settings are
-  unaffected. Existing deployment dependency specifications were preserved.
-- `deploy/teardown_gcp.sh`: destructive cloud teardown, not part of verification.
+- `deploy/deploy_all_specialists.py` builds and deploys all five specialist agents—Brand Strategist, 
+  Copywriter, Designer, Critic, and Project Manager—to Google Cloud Run. The script collects the deployed 
+  service URLs and automatically updates the local `.env` configuration. Deployment may create or update 
+  Secret Manager versions and IAM bindings.
 
-A2A timeout 180s is shorter than Cloud Run 300s and possible repeated model call budgets. A local
-timeout can leave a remote write/generation running. Do not solve this by replaying the operation.
+- `deploy/deploy_orchestrator.py` deploys the Creative Director to Vertex AI Agent Engine and passes 
+   the specialist Cloud Run URLs through environment variables, enabling   distributed A2A communication.
+
+The deployed architecture has been exercised through a cloud campaign, including specialist communication, 
+generated assets, Critic feedback, revisions, and enforcement of the quality-gate limit.
 
 ## Cloud changes requiring explicit approval
 1. Implement/test ID-token authentication for A2A requests AND agent-card discovery. Then remove

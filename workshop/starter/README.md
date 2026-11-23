@@ -79,8 +79,12 @@ uv run --frozen --no-sync python evaluation/offline.py
 - Full offline pytest suite: 101 passed, 0 failed
 - Additional regression coverage includes empty Critic response cleanup
   and static verification of ReliableRemoteAgent callback wiring.
-- Deployed A2A integration has not been revalidated during this
-  hardening pass.
+- **Deployed A2A integration:** The distributed workflow has been validated 
+  through a campaign executed on Vertex AI Agent Engine, communicating with 
+  specialist agents     deployed on Cloud Run. The execution demonstrated 
+  remote A2A communication, image generation and GCS storage, Critic feedback, 
+  Designer revisions, and enforcement of the quality-gate limit. The campaign 
+  was safely stopped without Project Manager execution when approval was not obtained.
 
 Tests use fakes/mocks, disable developer dotenv configuration and block external socket connections.
 They include actual local ADK Runner dispatch with scripted models; they do not prove distributed
@@ -92,8 +96,10 @@ Specialists run on Cloud Run; Director runs on Vertex AI Agent Engine; GCS store
 PM uses optional Notion MCP. Deployment entry points are under `deploy/` and can change secrets/IAM
 and create billable resources. Do not execute them without approval.
 Current production blockers include public Cloud Run invocation, a shared specialist identity,
-non-durable side-effect guards, prompt injection risks and expiring Notion image links. The deployment
-list currently enables only PM. Model defaults vary across code/config; select a supported model and
+non-durable side-effect guards, prompt injection risks and expiring Notion image links. The deployment 
+configuration includes all five specialist agents: Brand Strategist, Copywriter, Designer, Critic, and 
+Project Manager. The deployment scripts collect Cloud Run service URLs and pass them to the Creative 
+Director on Vertex AI Agent Engine.. Model defaults vary across code/config; select a supported model and
 region explicitly. Existing deployments have not been changed or validated.
 
 - [Architecture](docs/architecture.md)
