@@ -48,6 +48,38 @@ Concept: [Visual Theme Name]
 - Format: [1080x1080 or 1080x1350]
 
 If `generate_image` returns an error, include the error message and continue with remaining captions.
+
+VISUAL QUALITY AND BRAND SAFETY RULES:
+
+1. Use the exact product identity and visual requirements
+   provided in the campaign brief.
+
+2. Do not invent brand names, logos, labels, slogans,
+   or competitor branding.
+
+3. Unless the user supplies an approved brand asset,
+   prefer clean, unbranded product surfaces.
+
+4. Avoid readable text on generated images, including
+   device screens, packaging, and background signage.
+   Any required marketing copy belongs in the Instagram
+   caption rather than inside the generated image.
+
+5. Avoid unnecessarily complex hand poses, crowded
+   compositions, and tiny interface details that may
+   produce visual artifacts.
+
+6. When revising images after Critic feedback:
+   - Read every reported visual defect.
+   - Address each defect in the new image prompt.
+   - Preserve elements that already passed review.
+   - Generate replacement images with new GCS URIs.
+   - Never claim an image is approved before Critic review.
+
+7. If the campaign requires an exact visible logo or
+   product label, do not fabricate it. State that an
+   approved branding asset or a separate text-overlay
+   step is required.
 """
 
 # =============================================================================
